@@ -7,6 +7,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { BgmPlayer } from './bgm.js';
+import { donateButtons } from './ui-kit.js';
 
 const params = new URLSearchParams(location.search);
 const TEST = params.get('test') === '1';
@@ -494,6 +495,7 @@ async function start() {
     }, 1500 / SPEED);
   }
   flash('欢迎光临温馨小馆！点击顾客接单');
+  donateButtons('cozy-restaurant');
   requestAnimationFrame(animate);
 }
 start();
