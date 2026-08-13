@@ -41,4 +41,10 @@ export function donateButtons(slug, afdianUrl = 'https://afdian.com/a/zsy2026') 
   wrap.appendChild(mk('💝 完整版 $1', `https://zsy2026.itch.io/${slug}`, '#e8794f'));
   wrap.appendChild(mk('⚡ 爱发电赞助', afdianUrl, '#6eb5ff'));
   document.body.appendChild(wrap);
+  // 退款声明小字
+  const note = document.createElement('div');
+  note.textContent = '数字商品 · 售出不退';
+  note.style.cssText = 'position:fixed;bottom:10px;right:10px;color:rgba(255,255,255,0.55);font:10px Arial;z-index:97;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,0.5)';
+  wrap.appendChild(note);
+  note.style.cssText += ';margin-top:4px;text-align:right;width:100%';
 }
