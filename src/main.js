@@ -67,11 +67,14 @@ sun.shadow.camera.top = 20; sun.shadow.camera.bottom = -20;
 scene.add(sun);
 
 function loadModel(path) {
-  return loader.loadAsync(path).then(g => {
-    const m = g.scene;
-    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    return m;
-  }).catch(e => { console.warn('模型加载失败:', path); return null; });
+  return Promise.race([
+    loader.loadAsync(path).then(g => {
+      const m = g.scene;
+      m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      return m;
+    }),
+    new Promise(res => setTimeout(() => res(null), 8000)),
+  ]).catch(e => { console.warn('模型加载失败:', path); return null; });
 }
 async function ensure(name, path) {
   if (!(name in models)) models[name] = await loadModel(path);
