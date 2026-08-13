@@ -153,7 +153,25 @@ async function buildScene() {
     l.position.set(0, 0.06, j); scene.add(l);
   }
   // 后墙（奶油色）+ 窗户
-  const wall = await ensure('wall', `${ASSETS}furniture/wall.glb`);
+  // 并行预加载所有模型（避免串行卡加载）
+  await Promise.all([
+    ensure('wall', `${ASSETS}furniture/wall.glb`),
+    ensure('table', `${ASSETS}furniture/tableCloth.glb`),
+    ensure('stove', `${ASSETS}furniture/kitchenStove.glb`),
+    ensure('fridge', `${ASSETS}furniture/kitchenFridgeBuiltIn.glb`),
+    ensure('chair', `${ASSETS}furniture/chair.glb`),
+    ensure('sofa', `${ASSETS}furniture/loungeSofaOttoman.glb`),
+    ensure('bar', `${ASSETS}furniture/kitchenBarEnd.glb`),
+    ensure('lamp', `${ASSETS}furniture/lampRoundTable.glb`),
+    ensure('pot', `${ASSETS}food/pot.glb`),
+    ensure('pan', `${ASSETS}food/pan.glb`),
+    ensure('knife', `${ASSETS}food/knife-block.glb`),
+    ensure('plate', `${ASSETS}food/plate-rectangle.glb`),
+    ensure('panstew', `${ASSETS}food/pan-stew.glb`),
+    ensure('cup', `${ASSETS}food/cup-coffee.glb`),
+    ensure('customer', `${ASSETS}characters/manneko_low_poly_girl.glb`),
+  ]);
+  const wall = models['wall'];
   place('wall', 0, 3, -6, 1.2, 0);
   place('wall', -8, 3, 0, 1.2, Math.PI / 2);
   place('wall', 8, 3, 0, 1.2, -Math.PI / 2);
@@ -161,27 +179,13 @@ async function buildScene() {
   const win = new THREE.Mesh(new THREE.BoxGeometry(4, 1.8, 0.1),
     new THREE.MeshStandardMaterial({ color: 0xd6ecff, transparent: true, opacity: 0.85, emissive: 0xa5d8f0, emissiveIntensity: 0.3 }));
   win.position.set(0, 3.2, -5.9); scene.add(win);
-
-  // 家具：餐桌 + 椅子 + 沙发 + 冰箱 + 吧台 + 灶台（厨房区）
-  await ensure('table', `${ASSETS}furniture/tableCloth.glb`);
-  await ensure('stove', `${ASSETS}furniture/kitchenStove.glb`);
-  await ensure('fridge', `${ASSETS}furniture/kitchenFridgeBuiltIn.glb`);
-  await ensure('chair', `${ASSETS}furniture/chair.glb`);
-  await ensure('sofa', `${ASSETS}furniture/loungeSofaOttoman.glb`);
-  await ensure('bar', `${ASSETS}furniture/kitchenBarEnd.glb`);
-  await ensure('lamp', `${ASSETS}furniture/lampRoundTable.glb`);
+  // 家具已并行加载完成，直接摆放
 
   // 厨房区（右侧）: 灶台 + 冰箱 + 吧台 + 锅碗瓢盆
   place('stove', 5.5, 0.6, -3.5, 1, -Math.PI / 2);
   place('fridge', 6.8, 0.9, -4.5, 1, -Math.PI / 2);
   place('bar', -6.5, 0.7, -4, 1.1, 0);
-  // 吧台上的锅碗瓢盆（food-kit）
-  await ensure('pot', `${ASSETS}food/pot.glb`);
-  await ensure('pan', `${ASSETS}food/pan.glb`);
-  await ensure('knife', `${ASSETS}food/knife-block.glb`);
-  await ensure('plate', `${ASSETS}food/plate-rectangle.glb`);
-  await ensure('panstew', `${ASSETS}food/pan-stew.glb`);
-  await ensure('cup', `${ASSETS}food/cup-coffee.glb`);
+  // 吧台上的锅碗瓢盆（已并行加载）
   place('pot', 6.4, 1.4, -3.6, 1.1, 0);
   place('pan', 5.4, 1.35, -2.8, 1, 0);
   place('panstew', 6.0, 1.35, -3.1, 1, 0.3);
@@ -204,8 +208,7 @@ async function buildScene() {
   place('lamp', 0, 2.6, -2, 1.2, 0);
   place('lamp', -4, 2.6, 2, 1.2, 0);
 
-  // 顾客 3D 角色（manneko 动漫女孩）
-  await ensure('customer', `${ASSETS}characters/manneko_low_poly_girl.glb`);
+
 }
 
 // ---- 顾客生成 ----
