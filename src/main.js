@@ -245,21 +245,42 @@ function onPointer(x, y) {
   pointer.x = (x / renderer.domElement.clientWidth) * 2 - 1;
   pointer.y = -(y / renderer.domElement.clientHeight) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
-  // 先检测顾客
+  // 优先检测升级/解锁按钮（精确命中）
+  const upHits = raycaster.intersectObjects(game.clickables, true);
+  if (upHits.length) {
+    const u = findOwner2(upHits[0].object);
+    if (u && u.key) { buyUpgrade(u.key); return; }
+    if (u && u.dish !== undefined) { tryUnlock(u.dish); return; }
+  }
+  // 再检测顾客（精确命中）
   const groups = game.customers.map(c => c.group);
   const hits = raycaster.intersectObjects(groups, true);
   if (hits.length) {
     const cust = hits[0].object.userData.customer || findOwner(hits[0].object);
     if (cust && cust.state === 'waiting') { serve(cust); return; }
   }
-  // 再检测升级按钮（3D 方块）
-  const upHits = raycaster.intersectObjects(game.clickables, false);
-  if (upHits.length) {
-    const u = upHits[0].object.userData;
-    if (u && u.key) { buyUpgrade(u.key); return; }
-    if (u && u.dish !== undefined) { tryUnlock(u.dish); return; }
+  // 兜底：无精确命中时，服务"屏幕上离点击最近"的等待顾客（模拟经营手感）
+  if (game.customers.length) {
+    const waiters = game.customers.filter(c => c.state === 'waiting');
+    if (waiters.length) {
+      const proj = new THREE.Vector3();
+      let best = null, bestDist = Infinity;
+      for (const c of waiters) {
+        proj.copy(c.group.position).project(camera);
+        const sx = (proj.x * 0.5 + 0.5) * renderer.domElement.clientWidth;
+        const sy = (-proj.y * 0.5 + 0.5) * renderer.domElement.clientHeight;
+        const d = Math.hypot(sx - x, sy - y);
+        if (d < bestDist) { bestDist = d; best = c; }
+      }
+      if (best && bestDist < 150) { serve(best); return; }  // 150px 内就近服务
+    }
   }
   ensureAudio();  // 任意点击激活音乐
+}
+function findOwner2(obj) {
+  let o = obj;
+  while (o) { if (o.userData && (o.userData.key !== undefined || o.userData.dish !== undefined)) return o.userData; o = o.parent; }
+  return null;
 }
 function findOwner(obj) {
   let o = obj;
@@ -443,6 +464,15 @@ function animate(time) {
         flash('顾客等太久走了...');
       }
     }
+  }
+
+  // 自动经营（放置要素：每 15 秒自动收益）
+  game.autoTimer = (game.autoTimer || 0) + dt;
+  if (game.autoTimer > 15000 / SPEED) {
+    game.autoTimer = 0;
+    const auto = Math.floor(game.fame * 2 + (game.upgradeLv.sign || 1) * 5);
+    game.money += auto;
+    scoreFloat(0, 2.5, `自动经营 +${auto}`);
   }
 
   // 相机轻微晃动（生动）
